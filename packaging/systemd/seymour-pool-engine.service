@@ -1,0 +1,26 @@
+[Unit]
+Description=Seymour Pool Engine
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=seymour-engine
+Group=seymour-engine
+WorkingDirectory=/opt/seymour-pool-engine
+EnvironmentFile=/etc/seymour-pool-engine/engine.env
+ExecStart=/opt/seymour-pool-engine/.venv/bin/seymour-pool-engine
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/seymour-pool-engine
+StateDirectory=seymour-pool-engine
+
+[Install]
+WantedBy=multi-user.target
