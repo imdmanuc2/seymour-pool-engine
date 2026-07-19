@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any
 
 from seymour_pool_engine.database import miningcore_connection
@@ -62,39 +61,4 @@ class MiningCorePostgresClient:
         query += " ORDER BY poolid, miner, worker, created DESC"
         with miningcore_connection() as connection, connection.cursor() as cursor:
             cursor.execute(query, params)
-            return list(cursor.fetchall())
-
-    def latest_shares(
-        self,
-        *,
-        pool_id: str | None = None,
-        since: datetime | None = None,
-        limit: int = 1000,
-    ) -> list[dict[str, Any]]:
-        query = """
-            SELECT
-                poolid,
-                miner,
-                COALESCE(worker, '') AS worker,
-                difficulty,
-                networkdifficulty,
-                blockheight,
-                ipaddress,
-                useragent,
-                created
-            FROM public.shares
-            WHERE TRUE
-        """
-        params: list[Any] = []
-        if pool_id is not None:
-            query += " AND poolid = %s"
-            params.append(pool_id)
-        if since is not None:
-            query += " AND created > %s"
-            params.append(since)
-        query += " ORDER BY created DESC LIMIT %s"
-        params.append(limit)
-
-        with miningcore_connection() as connection, connection.cursor() as cursor:
-            cursor.execute(query, tuple(params))
             return list(cursor.fetchall())

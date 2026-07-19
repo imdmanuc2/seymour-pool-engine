@@ -1,0 +1,8 @@
+{
+  "package": "003-share-pipeline",
+  "version": "1.0.0",
+  "requires": ["002-worker-lifecycle"],
+  "database": true,
+  "migration": "004_share_pipeline",
+  "restartServices": ["seymour-pool-engine.service"]
+}

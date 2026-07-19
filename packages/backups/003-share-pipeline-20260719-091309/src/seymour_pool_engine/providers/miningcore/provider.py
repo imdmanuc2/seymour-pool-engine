@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-from hashlib import sha256
 
 from seymour_pool_engine.config import get_settings
 from seymour_pool_engine.providers.base import MiningProvider
@@ -9,7 +8,6 @@ from seymour_pool_engine.providers.models import (
     ComponentCheck,
     PoolSummary,
     ProviderStatus,
-    ShareSummary,
     WorkerSummary,
 )
 
@@ -108,41 +106,3 @@ class MiningCoreProvider(MiningProvider):
             )
             for row in self.postgres.latest_worker_stats(pool_id)
         ]
-
-    def list_shares(
-        self,
-        *,
-        pool_id: str | None = None,
-        since: datetime | None = None,
-        limit: int = 1000,
-    ) -> list[ShareSummary]:
-        shares: list[ShareSummary] = []
-        for row in self.postgres.latest_shares(pool_id=pool_id, since=since, limit=limit):
-            key_material = "|".join(
-                [
-                    str(row["poolid"]),
-                    str(row["miner"]),
-                    str(row.get("worker") or ""),
-                    str(row["difficulty"]),
-                    str(row.get("networkdifficulty")),
-                    str(row.get("blockheight")),
-                    str(row.get("ipaddress")),
-                    str(row.get("useragent")),
-                    row["created"].isoformat(),
-                ]
-            )
-            shares.append(
-                ShareSummary(
-                    providerShareKey=sha256(key_material.encode("utf-8")).hexdigest(),
-                    poolId=row["poolid"],
-                    miner=row["miner"],
-                    worker=row.get("worker") or "",
-                    difficulty=row["difficulty"],
-                    networkDifficulty=row.get("networkdifficulty"),
-                    blockHeight=row.get("blockheight"),
-                    ipAddress=row.get("ipaddress"),
-                    userAgent=row.get("useragent"),
-                    createdAt=row["created"],
-                )
-            )
-        return shares

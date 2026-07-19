@@ -48,19 +48,3 @@ class WorkerSummary(BaseModel):
     observed_at: datetime = Field(alias="observedAt")
 
     model_config = {"populate_by_name": True}
-
-
-class ShareSummary(BaseModel):
-    provider_share_key: str = Field(alias="providerShareKey")
-    pool_id: str = Field(alias="poolId")
-    miner: str
-    worker: str = ""
-    difficulty: float
-    network_difficulty: float | None = Field(default=None, alias="networkDifficulty")
-    block_height: int | None = Field(default=None, alias="blockHeight")
-    ip_address: str | None = Field(default=None, alias="ipAddress")
-    user_agent: str | None = Field(default=None, alias="userAgent")
-    created_at: datetime = Field(alias="createdAt")
-    metadata: dict[str, Any] = Field(default_factory=dict)
-
-    model_config = {"populate_by_name": True}
