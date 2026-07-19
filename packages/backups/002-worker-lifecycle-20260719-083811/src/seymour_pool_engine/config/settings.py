@@ -34,7 +34,6 @@ class Settings(BaseSettings):
     )
     miningcore_database_url: str | None = None
     miningcore_api_url: str = "http://127.0.0.1:4000"
-    worker_active_window_seconds: int = 300
 
 
 @lru_cache

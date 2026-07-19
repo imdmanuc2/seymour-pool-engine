@@ -1,0 +1,10 @@
+{
+  "package_id": "001B",
+  "slug": "001b-provider-foundation",
+  "name": "Provider Foundation",
+  "version": "1.0.0",
+  "product": "seymour-pool-engine",
+  "requires": ["001A"],
+  "migration": "002_installation_provider_foundation",
+  "description": "Adds installation persistence and the MiningCore provider boundary."
+}

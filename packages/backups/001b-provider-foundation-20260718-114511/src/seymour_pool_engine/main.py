@@ -6,13 +6,11 @@ from fastapi import FastAPI
 from seymour_pool_engine.api import api_router
 from seymour_pool_engine.config import get_settings
 from seymour_pool_engine.identity import get_or_create_installation_id
-from seymour_pool_engine.services import register_installation
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     get_or_create_installation_id()
-    register_installation()
     yield
 
 

@@ -1,0 +1,11 @@
+{
+  "package_id": "002",
+  "slug": "002-worker-lifecycle",
+  "name": "Worker Inventory and Lifecycle",
+  "version": "1.0.0",
+  "product": "seymour-pool-engine",
+  "requires": ["001B"],
+  "migration": "003_worker_lifecycle",
+  "restart_services": ["seymour-pool-engine.service"],
+  "description": "Adds SPE-owned persistent worker inventory, provider synchronization, lifecycle reconciliation, and worker APIs."
+}
