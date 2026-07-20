@@ -1,0 +1,6 @@
+{
+  "package": "005-block-lifecycle",
+  "version": "1.0.0",
+  "migration": "006_block_lifecycle",
+  "requires": "004-statistics-engine"
+}

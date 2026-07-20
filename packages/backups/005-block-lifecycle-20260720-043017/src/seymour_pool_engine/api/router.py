@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
 from seymour_pool_engine.api.routes import (
-    blocks_router,
     health_router,
     miningcore_router,
     shares_router,
@@ -11,7 +10,6 @@ from seymour_pool_engine.api.routes import (
 )
 
 api_router = APIRouter()
-api_router.include_router(blocks_router)
 api_router.include_router(system_router)
 api_router.include_router(health_router)
 api_router.include_router(miningcore_router)
