@@ -4,7 +4,6 @@ from seymour_pool_engine.api.routes import (
     blocks_router,
     health_router,
     miningcore_router,
-    rewards_router,
     shares_router,
     statistics_router,
     system_router,
@@ -16,7 +15,6 @@ api_router.include_router(blocks_router)
 api_router.include_router(system_router)
 api_router.include_router(health_router)
 api_router.include_router(miningcore_router)
-api_router.include_router(rewards_router)
 api_router.include_router(workers_router)
 api_router.include_router(shares_router)
 api_router.include_router(statistics_router)

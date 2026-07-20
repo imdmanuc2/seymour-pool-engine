@@ -1,0 +1,6 @@
+{
+  "package": "006-reward-accounting-foundation",
+  "version": "1.0.0",
+  "migration": "007_reward_accounting_foundation",
+  "requires": "005-block-lifecycle"
+}
