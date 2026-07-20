@@ -1,0 +1,11 @@
+{
+  "package": "009-developer-fee-pool-economics",
+  "migration": "010_developer_fee_pool_economics",
+  "requires": "008-health-monitoring-alerts",
+  "developerFee": {
+    "mandatory": true,
+    "minimumPercent": 0.75,
+    "canIncrease": true,
+    "canDisable": false
+  }
+}

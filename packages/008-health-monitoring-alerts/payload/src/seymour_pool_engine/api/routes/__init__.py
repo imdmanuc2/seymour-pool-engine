@@ -1,6 +1,5 @@
 from seymour_pool_engine.api.routes.blocks import router as blocks_router
 from seymour_pool_engine.api.routes.diagnostics import router as diagnostics_router
-from seymour_pool_engine.api.routes.economics import router as economics_router
 from seymour_pool_engine.api.routes.health import router as health_router
 from seymour_pool_engine.api.routes.miningcore import router as miningcore_router
 from seymour_pool_engine.api.routes.monitoring import router as monitoring_router
@@ -14,7 +13,6 @@ __all__ = [
     "blocks_router",
     "health_router",
     "diagnostics_router",
-    "economics_router",
     "miningcore_router",
     "monitoring_router",
     "rewards_router",

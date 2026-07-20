@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -6,20 +7,36 @@ __pycache__/
 htmlcov/
 .ruff_cache/
 
+# Virtual environments
 .venv/
 venv/
 
+# Environment files
 .env
 .env.local
 
+# Build artifacts
 dist/
 build/
 
+# Logs
 *.log
 *.pid
 
+# IDEs
 .idea/
 .vscode/
 .DS_Store
 
+# Runtime data
 data/
+
+# Package artifacts
+packages/*.zip
+packages/backups/
+packages/**/.last_backup_dir
+
+# SQLite (if ever used)
+*.db
+*.db-shm
+*.db-wal

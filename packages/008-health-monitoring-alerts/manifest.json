@@ -1,0 +1,7 @@
+{
+  "package": "008-health-monitoring-alerts",
+  "version": "1.0.0",
+  "migration": "009_health_monitoring_alerts",
+  "requires": "008_pool_operations_diagnostics",
+  "description": "Persistent health monitoring and operational alert lifecycle"
+}
