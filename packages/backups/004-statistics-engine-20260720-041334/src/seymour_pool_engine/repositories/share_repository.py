@@ -38,8 +38,7 @@ class ShareRepository:
                         ip_address,
                         user_agent,
                         provider_created_at,
-                        metadata,
-                        share_status
+                        metadata
                     )
                     VALUES (
                         %s,
@@ -54,7 +53,7 @@ class ShareRepository:
                               AND worker = %s
                             LIMIT 1
                         ),
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                     )
                     ON CONFLICT (provider_name, provider_share_key) DO NOTHING
                     """,
@@ -76,7 +75,6 @@ class ShareRepository:
                         observation.user_agent,
                         observation.created_at,
                         observation.metadata,
-                        str(observation.metadata.get("shareStatus", "accepted")).lower(),
                     ),
                 )
                 if cursor.rowcount == 1:
