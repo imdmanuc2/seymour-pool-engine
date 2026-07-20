@@ -1,0 +1,6 @@
+{
+  "package": "010-configuration-backup",
+  "migration": "011_configuration_backup",
+  "version": "1.0.0",
+  "description": "Versioned configuration management, validation, backup export/import, and rollback"
+}

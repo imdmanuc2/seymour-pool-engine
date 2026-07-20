@@ -1,0 +1,6 @@
+{
+  "package": "011-wallet-management",
+  "migration": "012_wallet_management",
+  "requires": "010-configuration-backup",
+  "version": "1.0.0"
+}

@@ -9,7 +9,6 @@ from seymour_pool_engine.api.routes.rewards import router as rewards_router
 from seymour_pool_engine.api.routes.shares import router as shares_router
 from seymour_pool_engine.api.routes.statistics import router as statistics_router
 from seymour_pool_engine.api.routes.system import router as system_router
-from seymour_pool_engine.api.routes.wallets import router as wallets_router
 from seymour_pool_engine.api.routes.workers import router as workers_router
 
 __all__ = [
@@ -25,6 +24,4 @@ __all__ = [
     "statistics_router",
     "system_router",
     "workers_router",
-    "wallets_router",
 ]
-
