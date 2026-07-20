@@ -1,6 +1,6 @@
 from seymour_pool_engine.api.routes.blocks import router as blocks_router
-from seymour_pool_engine.api.routes.diagnostics import router as diagnostics_router
 from seymour_pool_engine.api.routes.health import router as health_router
+from seymour_pool_engine.api.routes.diagnostics import router as diagnostics_router
 from seymour_pool_engine.api.routes.miningcore import router as miningcore_router
 from seymour_pool_engine.api.routes.rewards import router as rewards_router
 from seymour_pool_engine.api.routes.shares import router as shares_router

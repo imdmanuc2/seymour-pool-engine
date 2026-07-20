@@ -1,0 +1,5 @@
+{
+  "package": "007-pool-operations-diagnostics",
+  "migration": "008_pool_operations_diagnostics",
+  "requires": "006-reward-accounting-foundation"
+}
