@@ -1,0 +1,6 @@
+{
+  "package": "020-bitcoin-template-job-engine",
+  "migration": "021_bitcoin_template_job_engine",
+  "prerequisite": "020_stratum_protocol_foundation",
+  "project": "seymour-pool-engine"
+}
