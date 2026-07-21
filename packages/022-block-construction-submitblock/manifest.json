@@ -1,0 +1,5 @@
+{
+  "package": "022-block-construction-submitblock",
+  "migration": "023_block_construction_submitblock",
+  "depends_on": "021-share-validation-pipeline"
+}
