@@ -1,0 +1,14 @@
+{
+  "package": "015-multi-coin-multi-wallet-operations",
+  "version": "1.0.0",
+  "migration": "016_multi_coin_multi_wallet_operations",
+  "requires": [
+    "014-payment-scheduler"
+  ],
+  "entrypoints": [
+    "scripts/doctor.sh",
+    "scripts/install.sh",
+    "scripts/verify.sh",
+    "scripts/rollback.sh"
+  ]
+}

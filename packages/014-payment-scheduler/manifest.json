@@ -1,0 +1,12 @@
+{
+  "package": "014-payment-scheduler",
+  "version": "1.0.0",
+  "migration": "015_payment_scheduler",
+  "requires": ["013-coinbase-maturity-tracking"],
+  "entrypoints": [
+    "scripts/doctor.sh",
+    "scripts/install.sh",
+    "scripts/verify.sh",
+    "scripts/rollback.sh"
+  ]
+}

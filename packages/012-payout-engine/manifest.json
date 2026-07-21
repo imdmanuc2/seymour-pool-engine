@@ -1,0 +1,6 @@
+{
+  "package": "012-payout-engine",
+  "migration": "013_payout_engine",
+  "requires": "011-wallet-management",
+  "version": "1.0.0"
+}

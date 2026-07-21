@@ -1,0 +1,6 @@
+{
+  "package": "019-native-stratum-protocol-foundation",
+  "migration": "020_stratum_protocol_foundation",
+  "prerequisite": "019_nexus_integration_release_readiness",
+  "project": "seymour-pool-engine"
+}

@@ -1,0 +1,15 @@
+{
+  "package": "013-coinbase-maturity-tracking",
+  "migration": "014_coinbase_maturity_tracking",
+  "requires": "012-payout-engine",
+  "files": [
+    "migrations/014_coinbase_maturity_tracking.sql",
+    "src/seymour_pool_engine/api/router.py",
+    "src/seymour_pool_engine/api/routes/__init__.py",
+    "src/seymour_pool_engine/api/routes/coinbase_maturity.py",
+    "src/seymour_pool_engine/repositories/coinbase_maturity_repository.py",
+    "src/seymour_pool_engine/services/coinbase_maturity_service.py",
+    "tests/test_coinbase_maturity_api.py",
+    "tests/test_coinbase_maturity_service.py"
+  ]
+}

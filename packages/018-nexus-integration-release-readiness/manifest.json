@@ -1,0 +1,5 @@
+{
+  "package": "018-nexus-integration-release-readiness",
+  "migration": "019_nexus_integration_release_readiness",
+  "version": "1.0.0"
+}

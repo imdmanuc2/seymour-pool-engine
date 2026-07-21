@@ -1,0 +1,6 @@
+{
+  "package": "016-security-access-control",
+  "version": "1.0.0",
+  "migration": "017_security_access_control",
+  "description": "Security principals, RBAC, API keys, authentication, authorization, audit events, rate-limit policies, and approval foundations."
+}
