@@ -1,0 +1,6 @@
+{
+  "package": "024-production-resilience-node-failover",
+  "migration": "025_production_resilience_node_failover",
+  "description": "Bitcoin Core RPC endpoint failover, circuit breaking, health APIs, and failover history",
+  "tests": ["tests/test_production_resilience_node_failover.py"]
+}
