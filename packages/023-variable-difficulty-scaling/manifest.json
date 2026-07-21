@@ -1,0 +1,6 @@
+{
+  "package": "023-variable-difficulty-scaling",
+  "migration": "024_variable_difficulty_scaling",
+  "description": "Adaptive Stratum variable difficulty and scaling telemetry",
+  "tests": ["tests/test_variable_difficulty_scaling.py"]
+}
