@@ -1,0 +1,1 @@
+{"package":"021-share-validation-pipeline","migration":"022_share_validation_pipeline","requires":"020-bitcoin-template-job-engine"}
