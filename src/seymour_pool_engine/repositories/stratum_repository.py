@@ -258,7 +258,9 @@ class StratumRepository:
                         "reject_reason,validation_mode,submission_fingerprint,share_hash,"
                         "share_difficulty,block_candidate,header_hex) "
                         "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'sha256d-full',%s,%s,%s,%s,%s) "
-                        "ON CONFLICT(submission_fingerprint) DO NOTHING",
+                        "ON CONFLICT(submission_fingerprint) "
+                        "WHERE submission_fingerprint IS NOT NULL "
+                        "DO NOTHING",
                         (
                             s.session_id,
                             s.worker_name,
