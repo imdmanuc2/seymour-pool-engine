@@ -2,6 +2,8 @@ import logging
 from typing import Any
 from uuid import UUID
 
+from psycopg.rows import tuple_row
+
 from seymour_pool_engine.database import engine_connection
 from seymour_pool_engine.engines.jobs.models import BitcoinBlockTemplate, StratumJob
 from seymour_pool_engine.engines.session.models import StratumSession
@@ -13,7 +15,7 @@ class StratumRepository:
     def _run(self, sql: str, params: tuple[Any, ...] = ()) -> None:
         try:
             with engine_connection() as connection:
-                with connection.cursor() as cursor:
+                with connection.cursor(row_factory=tuple_row) as cursor:
                     cursor.execute(sql, params)
                 connection.commit()
         except Exception:
@@ -135,7 +137,7 @@ class StratumRepository:
 
     def get_job(self, job_id: str) -> StratumJob | None:
         with engine_connection() as connection:
-            with connection.cursor() as cursor:
+            with connection.cursor(row_factory=tuple_row) as cursor:
                 cursor.execute(
                     "SELECT job_id,template_height,previous_block_hash,coinbase1,coinbase2,"
                     "merkle_branches,version,nbits,ntime,clean_jobs,source,coinbase_value,"
@@ -165,7 +167,7 @@ class StratumRepository:
 
     def latest_job(self) -> StratumJob | None:
         with engine_connection() as connection:
-            with connection.cursor() as cursor:
+            with connection.cursor(row_factory=tuple_row) as cursor:
                 cursor.execute(
                     "SELECT job_id,template_height,previous_block_hash,coinbase1,coinbase2,"
                     "merkle_branches,version,nbits,ntime,clean_jobs,source,coinbase_value,"
@@ -196,7 +198,7 @@ class StratumRepository:
         import json
 
         with engine_connection() as connection:
-            with connection.cursor() as cursor:
+            with connection.cursor(row_factory=tuple_row) as cursor:
                 cursor.execute(
                     "SELECT raw_template FROM seymour_engine.bitcoin_block_templates "
                     "WHERE height=%s ORDER BY received_at DESC LIMIT 1",
@@ -212,7 +214,7 @@ class StratumRepository:
 
     def template_status(self) -> dict[str, Any]:
         with engine_connection() as connection:
-            with connection.cursor() as cursor:
+            with connection.cursor(row_factory=tuple_row) as cursor:
                 cursor.execute(
                     "SELECT height,previous_block_hash,transaction_count,"
                     "coinbase_value,received_at "
@@ -249,7 +251,7 @@ class StratumRepository:
         fingerprint = ":".join(str(value) for value in values[:5])
         try:
             with engine_connection() as connection:
-                with connection.cursor() as cursor:
+                with connection.cursor(row_factory=tuple_row) as cursor:
                     cursor.execute(
                         "INSERT INTO seymour_engine.stratum_submissions "
                         "(session_id,worker_name,job_id,extranonce2,ntime,nonce,accepted,"
@@ -307,7 +309,7 @@ class StratumRepository:
 
     def vardiff_status(self) -> dict[str, Any]:
         with engine_connection() as connection:
-            with connection.cursor() as cursor:
+            with connection.cursor(row_factory=tuple_row) as cursor:
                 cursor.execute(
                     "SELECT COUNT(*) FILTER(WHERE disconnected_at IS NULL),"
                     "COALESCE(AVG(difficulty) FILTER(WHERE disconnected_at IS NULL),0),"
@@ -327,7 +329,7 @@ class StratumRepository:
 
     def difficulty_history(self, limit: int) -> list[dict[str, Any]]:
         with engine_connection() as connection:
-            with connection.cursor() as cursor:
+            with connection.cursor(row_factory=tuple_row) as cursor:
                 cursor.execute(
                     "SELECT difficulty_event_id,session_id,worker_name,old_difficulty,"
                     "new_difficulty,observed_share_seconds,target_share_seconds,reason,created_at "
@@ -352,7 +354,7 @@ class StratumRepository:
         ]
     def submission_stats(self) -> dict[str, Any]:
         with engine_connection() as connection:
-            with connection.cursor() as cursor:
+            with connection.cursor(row_factory=tuple_row) as cursor:
                 cursor.execute(
                     "SELECT COUNT(*),COUNT(*) FILTER(WHERE accepted),"
                     "COUNT(*) FILTER(WHERE NOT accepted),"
@@ -370,7 +372,7 @@ class StratumRepository:
 
     def status(self) -> dict[str, Any]:
         with engine_connection() as connection:
-            with connection.cursor() as cursor:
+            with connection.cursor(row_factory=tuple_row) as cursor:
                 cursor.execute(
                     "SELECT COUNT(*) FILTER(WHERE disconnected_at IS NULL),"
                     "COUNT(*) FILTER(WHERE disconnected_at IS NULL AND authorized),"
@@ -385,7 +387,7 @@ class StratumRepository:
 
     def sessions(self, limit: int) -> list[dict[str, Any]]:
         with engine_connection() as connection:
-            with connection.cursor() as cursor:
+            with connection.cursor(row_factory=tuple_row) as cursor:
                 cursor.execute(
                     "SELECT session_id,remote_host,remote_port,worker_name,subscribed,"
                     "authorized,difficulty,connected_at,last_activity_at,disconnected_at "
