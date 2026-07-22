@@ -1,0 +1,24 @@
+[Unit]
+Description=Seymour Pool Engine Stratum
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+[Service]
+Type=simple
+User=seymour-engine
+Group=seymour-engine
+WorkingDirectory=/opt/seymour-pool-engine
+EnvironmentFile=/etc/seymour-pool-engine/engine.env
+ExecStart=/opt/seymour-pool-engine/.venv/bin/python -m seymour_pool_engine.stratum_runtime
+Restart=always
+RestartSec=3
+TimeoutStopSec=30
+LimitNOFILE=65536
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/seymour-pool-engine
+StateDirectory=seymour-pool-engine
+[Install]
+WantedBy=multi-user.target

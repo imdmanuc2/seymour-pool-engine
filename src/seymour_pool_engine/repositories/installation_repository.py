@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
 from typing import Any
 
+from psycopg.types.json import Jsonb
+
 from seymour_pool_engine.database import engine_connection
 
 
@@ -17,13 +19,21 @@ class InstallationRepository:
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         now = datetime.now(UTC)
+
         with engine_connection() as connection, connection.cursor() as cursor:
             cursor.execute(
                 """
                 INSERT INTO seymour_engine.installations (
-                    installation_id, display_name, environment, hostname,
-                    first_seen_at, last_seen_at, engine_version,
-                    provider_name, updated_at, metadata
+                    installation_id,
+                    display_name,
+                    environment,
+                    hostname,
+                    first_seen_at,
+                    last_seen_at,
+                    engine_version,
+                    provider_name,
+                    updated_at,
+                    metadata
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (installation_id) DO UPDATE SET
@@ -34,7 +44,10 @@ class InstallationRepository:
                     engine_version = EXCLUDED.engine_version,
                     provider_name = EXCLUDED.provider_name,
                     updated_at = EXCLUDED.updated_at,
-                    metadata = seymour_engine.installations.metadata || EXCLUDED.metadata
+                    metadata = (
+                        seymour_engine.installations.metadata
+                        || EXCLUDED.metadata
+                    )
                 RETURNING *
                 """,
                 (
@@ -47,8 +60,10 @@ class InstallationRepository:
                     engine_version,
                     provider_name,
                     now,
-                    metadata or {},
+                    Jsonb(metadata or {}),
                 ),
             )
             row = cursor.fetchone()
+            connection.commit()
+
         return dict(row)
