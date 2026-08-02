@@ -64,3 +64,5 @@ packages/**/.last_backup_dir
 *.db
 *.db-shm
 *.db-wal
+# Local development backups
+*.before-*

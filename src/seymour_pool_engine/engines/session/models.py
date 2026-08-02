@@ -28,3 +28,4 @@ class StratumSession:
     vardiff_last_retarget_at: datetime | None = None
     vardiff_share_baseline: int = 0
     difficulty_changes: int = 0
+    job_difficulties: dict[str, float] = field(default_factory=dict)

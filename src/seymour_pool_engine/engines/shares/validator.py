@@ -34,6 +34,19 @@ def _double_sha256(value: bytes) -> bytes:
     return hashlib.sha256(hashlib.sha256(value).digest()).digest()
 
 
+def _reverse_each_32bit_word(value: bytes) -> bytes:
+    if len(value) % 4:
+        raise ShareValidationError(
+            "malformed",
+            "value length must be divisible by four",
+        )
+
+    return b"".join(
+        value[index:index + 4][::-1]
+        for index in range(0, len(value), 4)
+    )
+
+
 def _hex_bytes(value: str, *, name: str, exact_bytes: int | None = None) -> bytes:
     try:
         decoded = bytes.fromhex(value)
@@ -77,6 +90,8 @@ def validate_share(
     nonce: str,
     difficulty: float | Decimal,
     extranonce2_size: int,
+    submitted_version_bits: str | None = None,
+    version_rolling_mask: str | None = None,
 ) -> ShareValidationResult:
     _hex_bytes(extranonce1, name="extranonce1")
     _hex_bytes(extranonce2, name="extranonce2", exact_bytes=extranonce2_size)
@@ -90,13 +105,67 @@ def validate_share(
     coinbase_hash = _double_sha256(coinbase)
     merkle_root = coinbase_hash
     for branch_hex in job.merkle_branches:
-        branch = _hex_bytes(branch_hex, name="merkle branch", exact_bytes=32)[::-1]
+        branch = _hex_bytes(branch_hex, name="merkle branch", exact_bytes=32)
         merkle_root = _double_sha256(merkle_root + branch)
 
-    version = _hex_bytes(job.version, name="version", exact_bytes=4)[::-1]
-    previous = _hex_bytes(job.previous_block_hash, name="previous block hash", exact_bytes=32)[::-1]
-    bits = _hex_bytes(job.nbits, name="nbits", exact_bytes=4)[::-1]
-    header = version + previous + merkle_root + ntime[::-1] + bits + nonce_bytes[::-1]
+    base_version_bytes = _hex_bytes(job.version, name="version", exact_bytes=4)
+    base_version = int.from_bytes(base_version_bytes, "big")
+
+    effective_version = base_version
+
+    if submitted_version_bits is not None:
+        submitted_bits_bytes = _hex_bytes(
+            submitted_version_bits,
+            name="version bits",
+            exact_bytes=4,
+        )
+        submitted_bits = int.from_bytes(submitted_bits_bytes, "big")
+
+        if version_rolling_mask is None:
+            raise ShareValidationError(
+                "invalid-version",
+                "version bits submitted without negotiated version rolling",
+            )
+
+        mask_bytes = _hex_bytes(
+            version_rolling_mask,
+            name="version rolling mask",
+            exact_bytes=4,
+        )
+        mask = int.from_bytes(mask_bytes, "big")
+
+        if submitted_bits & ~mask:
+            raise ShareValidationError(
+                "invalid-version",
+                "submitted version bits exceed negotiated mask",
+            )
+
+        effective_version = (
+            (base_version & ~mask)
+            | (submitted_bits & mask)
+        )
+
+    version = effective_version.to_bytes(4, "little")
+    previous = _reverse_each_32bit_word(
+        _hex_bytes(
+            job.previous_block_hash,
+            name="previous block hash",
+            exact_bytes=32,
+        )
+    )
+    bits = _hex_bytes(
+        job.nbits,
+        name="nbits",
+        exact_bytes=4,
+    )[::-1]
+    header = (
+        version
+        + previous
+        + merkle_root
+        + ntime[::-1]
+        + bits
+        + nonce_bytes[::-1]
+    )
     digest = _double_sha256(header)
     hash_value = int.from_bytes(digest, "little")
     share_target = difficulty_to_target(difficulty)

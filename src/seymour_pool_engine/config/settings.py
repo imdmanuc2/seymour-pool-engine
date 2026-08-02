@@ -45,8 +45,8 @@ class Settings(BaseSettings):
     bitcoin_rpc_timeout_seconds: float = 10.0
     bitcoin_payout_script: str = "51"
     bitcoin_coinbase_tag: str = "/Seymour/"
-    stratum_extranonce1_size: int = 6
-    stratum_extranonce2_size: int = 4
+    stratum_extranonce1_size: int = 4
+    stratum_extranonce2_size: int = 8
 
 
 @lru_cache

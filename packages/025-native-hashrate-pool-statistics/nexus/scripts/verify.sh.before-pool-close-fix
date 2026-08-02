@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
+heading "Verify Package 025"
+require_repo; load_env
+[[ -n "${SEYMOUR_ENGINE_DATABASE_URL:-}" ]] || fail "Engine database URL"
+PYTHON="$(python_bin)"
+heading "Static checks"
+"$PYTHON" -m ruff check \
+  "$REPO_ROOT/src/seymour_pool_engine/services/statistics_service.py" \
+  "$REPO_ROOT/src/seymour_pool_engine/repositories/statistics_repository.py" \
+  "$REPO_ROOT/src/seymour_pool_engine/api/routes/statistics.py" \
+  "$REPO_ROOT/tests/test_native_hashrate_statistics.py"
+pass "Ruff"
+heading "Native statistics tests"
+"$PYTHON" -m pytest -q "$REPO_ROOT/tests/test_native_hashrate_statistics.py"
+pass "Native statistics tests"
+heading "Database objects"
+psql "$SEYMOUR_ENGINE_DATABASE_URL" -Atqc "SELECT 1 FROM seymour_engine.schema_migrations WHERE migration_id='026_native_hashrate_pool_statistics'" | grep -qx 1 || fail "Migration 026 recorded"
+pass "Migration 026 recorded"
+psql "$SEYMOUR_ENGINE_DATABASE_URL" -Atqc "SELECT to_regclass('seymour_engine.native_statistics_snapshots') IS NOT NULL" | grep -qx t || fail "statistics snapshots table"
+pass "Statistics snapshots table"
+heading "Application routes"
+"$PYTHON" - <<'PYROUTES'
+from seymour_pool_engine.main import app
+paths = set(app.openapi()["paths"])
+required = {
+    "/api/v1/statistics/overview",
+    "/api/v1/statistics/pools",
+    "/api/v1/statistics/workers",
+    "/api/v1/statistics/workers/{worker_name}",
+    "/api/v1/statistics/engine",
+}
+missing = required - paths
+assert not missing, f"Missing routes: {sorted(missing)}"
+PYROUTES
+pass "Native statistics API routes"
+heading "Live query smoke test"
+"$PYTHON" - <<'PYQUERY'
+from seymour_pool_engine.services.statistics_service import StatisticsService
+service = StatisticsService()
+for window in ("1m", "5m", "15m", "1h"):
+    result = service.overview(window=window)
+    assert result["source"] == "seymour-native-stratum"
+    assert result["hashrate"] >= 0
+engine = service.engine(window="5m")
+assert engine["submissionsPerSecond"] >= 0
+print("Native statistics query PASS")
+PYQUERY
+pass "Live statistics query"
+printf '\nPackage 025 verified.\n'

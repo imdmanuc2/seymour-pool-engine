@@ -1,0 +1,9 @@
+payload/pyproject.toml
+payload/src/seymour_pool_engine/config/stratum.py
+payload/src/seymour_pool_engine/database/connections.py
+payload/src/seymour_pool_engine/stratum/server.py
+payload/tests/test_stratum_server.py
+scripts/doctor.sh
+scripts/install.sh
+scripts/verify.sh
+scripts/rollback.sh

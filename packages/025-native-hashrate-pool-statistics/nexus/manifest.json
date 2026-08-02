@@ -1,0 +1,6 @@
+{
+  "package": "025-native-hashrate-pool-statistics",
+  "migration": "026_native_hashrate_pool_statistics",
+  "description": "Native Seymour worker, pool, and engine statistics from Stratum shares",
+  "tests": ["tests/test_native_hashrate_statistics.py"]
+}
