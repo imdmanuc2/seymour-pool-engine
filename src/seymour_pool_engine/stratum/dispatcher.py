@@ -1,5 +1,6 @@
 import hashlib
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from seymour_pool_engine.config.stratum import (
@@ -34,9 +35,14 @@ class DispatchResult:
         self,
         messages: list[dict[str, Any]],
         error: tuple[int, str] | None = None,
+        *,
+        close_connection: bool = False,
+        close_reason: str | None = None,
     ) -> None:
         self.messages = messages
         self.error = error
+        self.close_connection = close_connection
+        self.close_reason = close_reason
 
 
 SUPPORTED_VERSION_ROLLING_MASK = 0x1FFFE000
@@ -79,6 +85,31 @@ class StratumDispatcher:
         job = create_synthetic_job()
         self.repository.record_job(job)
         return job
+
+    def recovery_messages(
+        self,
+        session: StratumSession,
+        *,
+        clean_jobs: bool = True,
+    ) -> list[dict[str, Any]]:
+        job = self._refresh_job(clean_jobs=clean_jobs)
+
+        self._remember_job_difficulty(
+            session,
+            job.job_id,
+            session.difficulty,
+        )
+
+        return [
+            notification(
+                "mining.set_difficulty",
+                [session.difficulty],
+            ),
+            notification(
+                "mining.notify",
+                job.notify_params(),
+            ),
+        ]
 
     def dispatch(
         self,
@@ -129,6 +160,11 @@ class StratumDispatcher:
 
             s.worker_name = r.params[0].strip()
             s.authorized = True
+            s.authorized_at = datetime.now(UTC)
+            s.no_share_recovery_attempted = False
+            s.stale_job_count = 0
+            s.stale_job_window_started_at = None
+            s.stale_job_recovery_attempted = False
 
             cpu_suffix = self.settings.cpu_worker_suffix.strip()
 
@@ -380,18 +416,86 @@ class StratumDispatcher:
             assigned_difficulty = s.job_difficulties.get(submitted_job_id)
 
             if assigned_difficulty is None:
+                now = datetime.now(UTC)
+                window_started = s.stale_job_window_started_at
+
+                if (
+                    window_started is None
+                    or (now - window_started).total_seconds()
+                    > self.settings.stale_job_window_seconds
+                ):
+                    s.stale_job_window_started_at = now
+                    s.stale_job_count = 1
+                    s.stale_job_recovery_attempted = False
+                else:
+                    s.stale_job_count += 1
+
+                recovery_threshold = self.settings.stale_job_recovery_threshold
+                disconnect_threshold = self.settings.stale_job_disconnect_threshold
+
                 logger.info(
-                    "STALE_SESSION_JOB worker=%s session=%s submitted_job=%s issued_jobs=%s",
+                    "STALE_SESSION_JOB "
+                    "worker=%s session=%s submitted_job=%s "
+                    "issued_jobs=%s count=%s "
+                    "recovery_attempted=%s",
                     s.worker_name,
                     s.session_id,
                     submitted_job_id,
                     list(s.job_difficulties),
+                    s.stale_job_count,
+                    s.stale_job_recovery_attempted,
                 )
 
+                recovery_messages: list[dict[str, Any]] = []
+
+                if s.stale_job_count >= recovery_threshold and not s.stale_job_recovery_attempted:
+                    recovery_messages = self.recovery_messages(
+                        s,
+                        clean_jobs=True,
+                    )
+
+                    s.stale_job_recovery_attempted = True
+                    recovery_job_id = recovery_messages[1]["params"][0]
+
+                    logger.warning(
+                        "STALE_JOB_RECOVERY "
+                        "worker=%s session=%s stale_count=%s "
+                        "submitted_job=%s recovery_job=%s "
+                        "difficulty=%s",
+                        s.worker_name,
+                        s.session_id,
+                        s.stale_job_count,
+                        submitted_job_id,
+                        recovery_job_id,
+                        s.difficulty,
+                    )
+
+                should_disconnect = s.stale_job_count >= disconnect_threshold
+
+                if should_disconnect:
+                    logger.warning(
+                        "STALE_JOB_DISCONNECT "
+                        "worker=%s session=%s stale_count=%s "
+                        "submitted_job=%s issued_jobs=%s",
+                        s.worker_name,
+                        s.session_id,
+                        s.stale_job_count,
+                        submitted_job_id,
+                        list(s.job_difficulties),
+                    )
+
                 return DispatchResult(
-                    [],
+                    recovery_messages,
                     (21, "stale or unknown job"),
+                    close_connection=should_disconnect,
+                    close_reason=(
+                        "stale job recovery threshold exceeded" if should_disconnect else None
+                    ),
                 )
+
+            s.stale_job_count = 0
+            s.stale_job_window_started_at = None
+            s.stale_job_recovery_attempted = False
 
             job = self.repository.get_job(submitted_job_id)
 

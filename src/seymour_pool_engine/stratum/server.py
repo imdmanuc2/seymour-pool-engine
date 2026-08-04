@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import UTC, datetime
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
 from typing import Any
@@ -238,12 +239,100 @@ class StratumServer:
 
         try:
             while True:
+                read_timeout = self.settings.idle_timeout_seconds
+
+                if (
+                    session.authorized
+                    and session.submissions_received == 0
+                    and session.authorized_at is not None
+                ):
+                    read_timeout = min(
+                        read_timeout,
+                        self.settings.no_share_recovery_seconds,
+                    )
+
                 try:
                     raw = await asyncio.wait_for(
                         reader.readline(),
-                        timeout=self.settings.idle_timeout_seconds,
+                        timeout=read_timeout,
                     )
                 except TimeoutError:
+                    now = datetime.now(UTC)
+
+                    if (
+                        session.authorized
+                        and session.submissions_received == 0
+                        and session.authorized_at is not None
+                    ):
+                        no_share_seconds = (now - session.authorized_at).total_seconds()
+
+                        if no_share_seconds >= self.settings.no_share_disconnect_seconds:
+                            reason = "no-share startup recovery exhausted"
+
+                            logger.warning(
+                                "NO_SHARE_DISCONNECT "
+                                "session=%s worker=%s peer=%s:%s "
+                                "no_share_seconds=%.3f "
+                                "messages_received=%s messages_sent=%s",
+                                session.session_id,
+                                session.worker_name or "-",
+                                session.remote_host,
+                                session.remote_port,
+                                no_share_seconds,
+                                session.messages_received,
+                                session.messages_sent,
+                            )
+
+                            writer.close()
+
+                            with suppress(Exception):
+                                await writer.wait_closed()
+
+                            break
+
+                        if (
+                            no_share_seconds >= self.settings.no_share_recovery_seconds
+                            and not session.no_share_recovery_attempted
+                        ):
+                            recovery_messages = await self._run_blocking(
+                                self.dispatcher.recovery_messages,
+                                session,
+                            )
+
+                            for message in recovery_messages:
+                                await self._send(
+                                    writer,
+                                    session,
+                                    message,
+                                )
+
+                            session.no_share_recovery_attempted = True
+
+                            logger.warning(
+                                "NO_SHARE_RECOVERY "
+                                "session=%s worker=%s peer=%s:%s "
+                                "no_share_seconds=%.3f "
+                                "difficulty=%s recovery_job=%s",
+                                session.session_id,
+                                session.worker_name or "-",
+                                session.remote_host,
+                                session.remote_port,
+                                no_share_seconds,
+                                session.difficulty,
+                                recovery_messages[1]["params"][0],
+                            )
+
+                            await self._run_blocking(
+                                self.repository.update_session,
+                                session,
+                            )
+
+                            continue
+
+                        # Keep checking the startup condition without
+                        # applying the normal idle timeout yet.
+                        continue
+
                     reason = "idle timeout"
 
                     logger.warning(
@@ -317,13 +406,39 @@ class StratumServer:
                                 *result.error,
                             ),
                         )
-                    else:
-                        for message in result.messages:
-                            await self._send(
-                                writer,
-                                session,
-                                message,
-                            )
+
+                    for message in result.messages:
+                        await self._send(
+                            writer,
+                            session,
+                            message,
+                        )
+
+                    if result.close_connection:
+                        reason = result.close_reason or "dispatcher requested connection close"
+
+                        logger.warning(
+                            "Stratum recovery closing connection "
+                            "session=%s worker=%s peer=%s:%s "
+                            "reason=%s",
+                            session.session_id,
+                            session.worker_name or "-",
+                            session.remote_host,
+                            session.remote_port,
+                            reason,
+                        )
+
+                        await self._run_blocking(
+                            self.repository.update_session,
+                            session,
+                        )
+
+                        writer.close()
+
+                        with suppress(Exception):
+                            await writer.wait_closed()
+
+                        break
 
                 except ProtocolError as exc:
                     logger.warning(

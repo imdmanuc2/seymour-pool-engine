@@ -30,3 +30,10 @@ class StratumSession:
     vardiff_share_baseline: int = 0
     difficulty_changes: int = 0
     job_difficulties: dict[str, float] = field(default_factory=dict)
+
+    stale_job_count: int = 0
+    stale_job_window_started_at: datetime | None = None
+    stale_job_recovery_attempted: bool = False
+
+    authorized_at: datetime | None = None
+    no_share_recovery_attempted: bool = False

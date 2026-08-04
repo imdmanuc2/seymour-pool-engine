@@ -17,6 +17,29 @@ class StratumSettings(BaseSettings):
     default_difficulty: float = Field(default=1024.0, gt=0)
     cpu_worker_suffix: str = ".cpu01"
     cpu_difficulty: float = Field(default=0.01, gt=0)
+
+    stale_job_window_seconds: float = Field(
+        default=10.0,
+        gt=0,
+    )
+    stale_job_recovery_threshold: int = Field(
+        default=3,
+        ge=1,
+    )
+    stale_job_disconnect_threshold: int = Field(
+        default=5,
+        ge=2,
+    )
+
+    no_share_recovery_seconds: float = Field(
+        default=30.0,
+        gt=0,
+    )
+    no_share_disconnect_seconds: float = Field(
+        default=60.0,
+        gt=0,
+    )
+
     extranonce2_size: int = Field(default=8, ge=2, le=16)
     processing_workers: int = Field(default=8, ge=1, le=128)
     processing_queue_limit: int = Field(default=2048, ge=16, le=100000)
