@@ -85,12 +85,37 @@ class VarDiffController:
 
         raw_factor = target / observed
         bounded = min(
-            self.config.max_step_factor, max(1.0 / self.config.max_step_factor, raw_factor)
+            self.config.max_step_factor,
+            max(
+                1.0 / self.config.max_step_factor,
+                raw_factor,
+            ),
         )
         damped = exp(self.config.damping * __import__("math").log(bounded))
         old = float(session.difficulty)
-        new = min(self.config.max_difficulty, max(self.config.min_difficulty, old * damped))
-        new = max(self.config.min_difficulty, round(new, 8))
+
+        session_minimum = max(
+            1e-8,
+            float(
+                getattr(
+                    session,
+                    "minimum_difficulty",
+                    self.config.min_difficulty,
+                )
+            ),
+        )
+
+        new = min(
+            self.config.max_difficulty,
+            max(
+                session_minimum,
+                old * damped,
+            ),
+        )
+        new = max(
+            session_minimum,
+            round(new, 8),
+        )
 
         session.vardiff_last_retarget_at = now
         session.vardiff_share_baseline = session.accepted_shares

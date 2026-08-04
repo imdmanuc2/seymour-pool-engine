@@ -10,6 +10,7 @@ class StratumSession:
     extranonce1: str
     extranonce2_size: int
     difficulty: float
+    minimum_difficulty: float = 1.0
     session_id: UUID = field(default_factory=uuid4)
     user_agent: str | None = None
     worker_name: str | None = None

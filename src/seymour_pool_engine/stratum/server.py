@@ -35,15 +35,16 @@ class StratumServer:
         self.settings = settings or get_stratum_settings()
         self._owns_repository = repository is None
         self.repository = repository or StratumRepository()
-        self.dispatcher = StratumDispatcher(self.repository)
+        self.dispatcher = StratumDispatcher(
+            self.repository,
+            settings=self.settings,
+        )
         self.extranonces = ExtranonceAllocator()
 
         self._server: asyncio.AbstractServer | None = None
         self._connections = 0
         self._lock = asyncio.Lock()
-        self._processing_slots = asyncio.Semaphore(
-            self.settings.processing_queue_limit
-        )
+        self._processing_slots = asyncio.Semaphore(self.settings.processing_queue_limit)
         self._executor = ThreadPoolExecutor(
             max_workers=self.settings.processing_workers,
             thread_name_prefix="seymour-share",
@@ -143,21 +144,13 @@ class StratumServer:
 
         if method is not None:
             return (
-                f"notification id={request_id!r} "
-                f"method={method!r} "
-                f"params={message.get('params')!r}"
+                f"notification id={request_id!r} method={method!r} params={message.get('params')!r}"
             )
 
         if "error" in message and message.get("error") is not None:
-            return (
-                f"response id={request_id!r} "
-                f"error={message.get('error')!r}"
-            )
+            return f"response id={request_id!r} error={message.get('error')!r}"
 
-        return (
-            f"response id={request_id!r} "
-            f"result={message.get('result')!r}"
-        )
+        return f"response id={request_id!r} result={message.get('result')!r}"
 
     async def _send(
         self,
@@ -273,8 +266,7 @@ class StratumServer:
                     reason = "client closed connection"
 
                     logger.info(
-                        "Stratum client closed connection "
-                        "session=%s worker=%s peer=%s:%s",
+                        "Stratum client closed connection session=%s worker=%s peer=%s:%s",
                         session.session_id,
                         session.worker_name or "-",
                         session.remote_host,
@@ -300,8 +292,7 @@ class StratumServer:
                     )
 
                     logger.debug(
-                        "RECV session=%s worker=%s peer=%s:%s "
-                        "id=%r method=%s params=%r",
+                        "RECV session=%s worker=%s peer=%s:%s id=%r method=%s params=%r",
                         session.session_id,
                         session.worker_name or "-",
                         session.remote_host,
@@ -336,9 +327,7 @@ class StratumServer:
 
                 except ProtocolError as exc:
                     logger.warning(
-                        "Stratum protocol error "
-                        "session=%s worker=%s peer=%s:%s "
-                        "code=%s message=%s",
+                        "Stratum protocol error session=%s worker=%s peer=%s:%s code=%s message=%s",
                         session.session_id,
                         session.worker_name or "-",
                         session.remote_host,
@@ -363,8 +352,7 @@ class StratumServer:
             reason = "server task cancelled"
 
             logger.info(
-                "Stratum connection task cancelled "
-                "session=%s worker=%s peer=%s:%s",
+                "Stratum connection task cancelled session=%s worker=%s peer=%s:%s",
                 session.session_id,
                 session.worker_name or "-",
                 session.remote_host,
@@ -377,8 +365,7 @@ class StratumServer:
             reason = "connection lost"
 
             logger.info(
-                "Stratum connection lost "
-                "session=%s worker=%s peer=%s:%s error=%s",
+                "Stratum connection lost session=%s worker=%s peer=%s:%s error=%s",
                 session.session_id,
                 session.worker_name or "-",
                 session.remote_host,
@@ -390,8 +377,7 @@ class StratumServer:
             reason = "server error"
 
             logger.exception(
-                "Unhandled Stratum client error "
-                "session=%s worker=%s peer=%s:%s",
+                "Unhandled Stratum client error session=%s worker=%s peer=%s:%s",
                 session.session_id,
                 session.worker_name or "-",
                 session.remote_host,

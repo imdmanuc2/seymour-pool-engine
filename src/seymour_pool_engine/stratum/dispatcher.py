@@ -2,6 +2,10 @@ import hashlib
 import logging
 from typing import Any
 
+from seymour_pool_engine.config.stratum import (
+    StratumSettings,
+    get_stratum_settings,
+)
 from seymour_pool_engine.engines.jobs.synthetic import create_synthetic_job
 from seymour_pool_engine.engines.protocol.codec import (
     RpcRequest,
@@ -45,11 +49,13 @@ class StratumDispatcher:
         job_service: TemplateJobService | None = None,
         block_service: BlockSubmissionService | None = None,
         vardiff: VarDiffController | None = None,
+        settings: StratumSettings | None = None,
     ) -> None:
         self.repository = repository
         self.job_service = job_service
         self.block_service = block_service
         self.vardiff = vardiff or VarDiffController()
+        self.settings = settings or get_stratum_settings()
 
     @staticmethod
     def _remember_job_difficulty(
@@ -123,6 +129,21 @@ class StratumDispatcher:
 
             s.worker_name = r.params[0].strip()
             s.authorized = True
+
+            cpu_suffix = self.settings.cpu_worker_suffix.strip()
+
+            if cpu_suffix and s.worker_name.endswith(cpu_suffix):
+                s.difficulty = self.settings.cpu_difficulty
+                s.minimum_difficulty = self.settings.cpu_difficulty
+
+                logger.info(
+                    "CPU_DIFFICULTY worker=%s difficulty=%s minimum_difficulty=%s",
+                    s.worker_name,
+                    s.difficulty,
+                    s.minimum_difficulty,
+                )
+            else:
+                s.minimum_difficulty = self.vardiff.config.min_difficulty
 
             logger.info(
                 "CKPOOL_COMPAT authorized session=%s worker=%s",

@@ -15,6 +15,8 @@ class StratumSettings(BaseSettings):
     max_connections: int = Field(default=1000, ge=1)
     max_line_bytes: int = Field(default=65536, ge=1024)
     default_difficulty: float = Field(default=1024.0, gt=0)
+    cpu_worker_suffix: str = ".cpu01"
+    cpu_difficulty: float = Field(default=0.01, gt=0)
     extranonce2_size: int = Field(default=8, ge=2, le=16)
     processing_workers: int = Field(default=8, ge=1, le=128)
     processing_queue_limit: int = Field(default=2048, ge=16, le=100000)
