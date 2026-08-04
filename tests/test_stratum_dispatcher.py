@@ -68,7 +68,7 @@ def test_submit_requires_authorization() -> None:
     assert result.error and result.error[0] == 24
 
 
-def test_subscribe_records_job_difficulty() -> None:
+def test_subscribe_does_not_issue_mining_job() -> None:
     repo = MemoryRepository()
     dispatcher = StratumDispatcher(repo)  # type: ignore[arg-type]
     session = make_session()
@@ -76,14 +76,18 @@ def test_subscribe_records_job_difficulty() -> None:
 
     result = dispatcher.dispatch(
         session,
-        RpcRequest(1, "mining.subscribe", ["miner"]),
+        RpcRequest(
+            1,
+            "mining.subscribe",
+            ["miner"],
+        ),
     )
 
     assert result.error is None
-    assert len(repo.jobs) == 1
-
-    job = repo.jobs[0]
-    assert session.job_difficulties[job.job_id] == 42.0
+    assert len(result.messages) == 1
+    assert result.messages[0]["id"] == 1
+    assert repo.jobs == []
+    assert session.job_difficulties == {}
 
 
 def test_authorize_records_job_difficulty() -> None:

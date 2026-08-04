@@ -92,34 +92,25 @@ class StratumDispatcher:
                 s.extranonce2_size,
             ]
 
-            job = self._refresh_job(clean_jobs=True)
-            notify_params = job.notify_params()
-
-            self._remember_job_difficulty(
-                s,
-                job.job_id,
-                s.difficulty,
-            )
-
             logger.info(
-                "CKPOOL_COMPAT startup session=%s difficulty=%s job=%s clean_jobs=%s",
+                "CKPOOL_COMPAT subscribed session=%s extranonce1=%s extranonce2_size=%s",
                 s.session_id,
-                s.difficulty,
-                notify_params[0],
-                notify_params[8],
+                s.extranonce1,
+                s.extranonce2_size,
             )
 
+            # Do not issue mining work during subscribe.
+            #
+            # Avalon firmware may send:
+            #   mining.subscribe
+            #   mining.configure
+            #   mining.authorize
+            #
+            # Work is issued exactly once after authorization so the
+            # miner never receives two competing clean startup jobs.
             return DispatchResult(
                 [
                     response(r.request_id, result),
-                    notification(
-                        "mining.set_difficulty",
-                        [s.difficulty],
-                    ),
-                    notification(
-                        "mining.notify",
-                        notify_params,
-                    ),
                 ]
             )
 
@@ -363,7 +354,25 @@ class StratumDispatcher:
                     (20, "invalid submission"),
                 )
 
-            job = self.repository.get_job(str(r.params[1]))
+            submitted_job_id = str(r.params[1])
+
+            assigned_difficulty = s.job_difficulties.get(submitted_job_id)
+
+            if assigned_difficulty is None:
+                logger.info(
+                    "STALE_SESSION_JOB worker=%s session=%s submitted_job=%s issued_jobs=%s",
+                    s.worker_name,
+                    s.session_id,
+                    submitted_job_id,
+                    list(s.job_difficulties),
+                )
+
+                return DispatchResult(
+                    [],
+                    (21, "stale or unknown job"),
+                )
+
+            job = self.repository.get_job(submitted_job_id)
 
             if job is None:
                 return DispatchResult(
@@ -381,11 +390,6 @@ class StratumDispatcher:
                 r.params[3],
                 r.params[4],
                 submitted_version_bits,
-            )
-
-            assigned_difficulty = s.job_difficulties.get(
-                job.job_id,
-                s.difficulty,
             )
 
             try:

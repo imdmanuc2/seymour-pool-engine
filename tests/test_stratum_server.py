@@ -38,21 +38,13 @@ async def test_tcp_subscribe_and_authorize() -> None:
     subscribe_response = json.loads(await reader.readline())
     assert subscribe_response["id"] == 1
     assert subscribe_response["result"][0] == [
-        ["mining.notify", subscribe_response["result"][0][0][1]],
+        [
+            "mining.notify",
+            subscribe_response["result"][0][0][1],
+        ],
     ]
 
-    subscribe_difficulty = json.loads(await reader.readline())
-    assert subscribe_difficulty["id"] is None
-    assert subscribe_difficulty["method"] == "mining.set_difficulty"
-
-    subscribe_notify = json.loads(await reader.readline())
-    assert subscribe_notify["id"] is None
-    assert subscribe_notify["method"] == "mining.notify"
-
-    writer.write(
-        b'{"id":2,"method":"mining.authorize",'
-        b'"params":["wallet.worker","x"]}\n'
-    )
+    writer.write(b'{"id":2,"method":"mining.authorize","params":["wallet.worker","x"]}\n')
     await writer.drain()
 
     authorize_response = json.loads(await reader.readline())
@@ -67,6 +59,7 @@ async def test_tcp_subscribe_and_authorize() -> None:
     writer.close()
     await writer.wait_closed()
     await server.stop()
+
 
 @pytest.mark.asyncio
 async def test_blocking_repository_does_not_starve_second_client() -> None:
